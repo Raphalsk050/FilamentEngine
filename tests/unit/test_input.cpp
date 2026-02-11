@@ -1,125 +1,225 @@
 // Unit tests for Input system
-#include "../test_helpers.h"
+#include <gtest/gtest.h>
 #include <filament_engine/core/input.h>
 
-TEST(Input_DefaultState_NoKeysPressed) {
+// =====================
+// Default state
+// =====================
+
+TEST(Input, DefaultState_NoKeysPressed) {
     fe::Input input;
-    ASSERT_FALSE(input.isKeyDown(fe::Key::W));
-    ASSERT_FALSE(input.isKeyDown(fe::Key::A));
-    ASSERT_FALSE(input.isKeyDown(fe::Key::S));
-    ASSERT_FALSE(input.isKeyDown(fe::Key::D));
-    ASSERT_FALSE(input.isKeyDown(fe::Key::Space));
-    ASSERT_FALSE(input.isKeyDown(fe::Key::Escape));
+    EXPECT_FALSE(input.isKeyDown(fe::Key::W));
+    EXPECT_FALSE(input.isKeyDown(fe::Key::A));
+    EXPECT_FALSE(input.isKeyDown(fe::Key::S));
+    EXPECT_FALSE(input.isKeyDown(fe::Key::D));
+    EXPECT_FALSE(input.isKeyDown(fe::Key::Space));
+    EXPECT_FALSE(input.isKeyDown(fe::Key::Escape));
 }
 
-TEST(Input_DefaultState_NoMouseButtons) {
+TEST(Input, DefaultState_NoMouseButtons) {
     fe::Input input;
-    ASSERT_FALSE(input.isMouseButtonDown(fe::MouseButton::Left));
-    ASSERT_FALSE(input.isMouseButtonDown(fe::MouseButton::Right));
-    ASSERT_FALSE(input.isMouseButtonDown(fe::MouseButton::Middle));
+    EXPECT_FALSE(input.isMouseButtonDown(fe::MouseButton::Left));
+    EXPECT_FALSE(input.isMouseButtonDown(fe::MouseButton::Right));
+    EXPECT_FALSE(input.isMouseButtonDown(fe::MouseButton::Middle));
 }
 
-TEST(Input_DefaultState_MousePositionZero) {
+TEST(Input, DefaultState_MousePositionZero) {
     fe::Input input;
     auto pos = input.getMousePosition();
-    ASSERT_NEAR(pos.x, 0.0f, 1e-6f);
-    ASSERT_NEAR(pos.y, 0.0f, 1e-6f);
+    EXPECT_FLOAT_EQ(pos.x, 0.0f);
+    EXPECT_FLOAT_EQ(pos.y, 0.0f);
 }
 
-TEST(Input_DefaultState_DeltaZero) {
+TEST(Input, DefaultState_DeltaZero) {
     fe::Input input;
     auto delta = input.getMouseDelta();
-    ASSERT_NEAR(delta.x, 0.0f, 1e-6f);
-    ASSERT_NEAR(delta.y, 0.0f, 1e-6f);
+    EXPECT_FLOAT_EQ(delta.x, 0.0f);
+    EXPECT_FLOAT_EQ(delta.y, 0.0f);
 }
 
-TEST(Input_DefaultState_ScrollDeltaZero) {
+TEST(Input, DefaultState_ScrollDeltaZero) {
     fe::Input input;
     auto scroll = input.getScrollDelta();
-    ASSERT_NEAR(scroll.x, 0.0f, 1e-6f);
-    ASSERT_NEAR(scroll.y, 0.0f, 1e-6f);
+    EXPECT_FLOAT_EQ(scroll.x, 0.0f);
+    EXPECT_FLOAT_EQ(scroll.y, 0.0f);
 }
 
-TEST(Input_KeyDown_ViaOnKeyEvent) {
+// =====================
+// Key events
+// =====================
+
+TEST(Input, KeyDown_ViaOnKeyEvent) {
     fe::Input input;
     input.onKeyEvent(static_cast<int>(fe::Key::W), true);
-    ASSERT_TRUE(input.isKeyDown(fe::Key::W));
-    ASSERT_FALSE(input.isKeyDown(fe::Key::S)); // other keys unaffected
+    EXPECT_TRUE(input.isKeyDown(fe::Key::W));
+    EXPECT_FALSE(input.isKeyDown(fe::Key::S));
 }
 
-TEST(Input_KeyUp_ViaOnKeyEvent) {
+TEST(Input, KeyUp_ViaOnKeyEvent) {
     fe::Input input;
     input.onKeyEvent(static_cast<int>(fe::Key::W), true);
-    ASSERT_TRUE(input.isKeyDown(fe::Key::W));
+    EXPECT_TRUE(input.isKeyDown(fe::Key::W));
     input.onKeyEvent(static_cast<int>(fe::Key::W), false);
-    ASSERT_FALSE(input.isKeyDown(fe::Key::W));
+    EXPECT_FALSE(input.isKeyDown(fe::Key::W));
 }
 
-TEST(Input_KeyPressed_FrameTransition) {
+TEST(Input, KeyPressed_FrameTransition) {
     fe::Input input;
-    // First frame: key goes down
     input.onKeyEvent(static_cast<int>(fe::Key::Space), true);
-    ASSERT_TRUE(input.isKeyPressed(fe::Key::Space));
+    EXPECT_TRUE(input.isKeyPressed(fe::Key::Space));
 
     // After beginFrame, pressed should clear
     input.beginFrame();
-    ASSERT_FALSE(input.isKeyPressed(fe::Key::Space));
-    ASSERT_TRUE(input.isKeyDown(fe::Key::Space)); // still held
+    EXPECT_FALSE(input.isKeyPressed(fe::Key::Space));
+    EXPECT_TRUE(input.isKeyDown(fe::Key::Space)); // still held
 }
 
-TEST(Input_KeyReleased_FrameTransition) {
+TEST(Input, KeyReleased_FrameTransition) {
     fe::Input input;
     input.onKeyEvent(static_cast<int>(fe::Key::Escape), true);
-    input.beginFrame(); // clear pressed flags
-
-    // Release key
-    input.onKeyEvent(static_cast<int>(fe::Key::Escape), false);
-    ASSERT_TRUE(input.isKeyReleased(fe::Key::Escape));
-
-    // After beginFrame, released should clear
     input.beginFrame();
-    ASSERT_FALSE(input.isKeyReleased(fe::Key::Escape));
+
+    input.onKeyEvent(static_cast<int>(fe::Key::Escape), false);
+    EXPECT_TRUE(input.isKeyReleased(fe::Key::Escape));
+
+    input.beginFrame();
+    EXPECT_FALSE(input.isKeyReleased(fe::Key::Escape));
 }
 
-TEST(Input_MouseButtonDown) {
+TEST(Input, MultipleKeys_Simultaneous) {
+    fe::Input input;
+    input.onKeyEvent(static_cast<int>(fe::Key::W), true);
+    input.onKeyEvent(static_cast<int>(fe::Key::A), true);
+    input.onKeyEvent(static_cast<int>(fe::Key::LShift), true);
+
+    EXPECT_TRUE(input.isKeyDown(fe::Key::W));
+    EXPECT_TRUE(input.isKeyDown(fe::Key::A));
+    EXPECT_TRUE(input.isKeyDown(fe::Key::LShift));
+    EXPECT_FALSE(input.isKeyDown(fe::Key::S));
+}
+
+TEST(Input, KeyPressed_NotTriggeredOnHold) {
+    fe::Input input;
+    input.onKeyEvent(static_cast<int>(fe::Key::W), true);
+    EXPECT_TRUE(input.isKeyPressed(fe::Key::W));
+
+    input.beginFrame();
+    // Key is still held but should not register as "pressed" anymore
+    EXPECT_FALSE(input.isKeyPressed(fe::Key::W));
+    EXPECT_TRUE(input.isKeyDown(fe::Key::W));
+
+    input.beginFrame();
+    EXPECT_FALSE(input.isKeyPressed(fe::Key::W));
+    EXPECT_TRUE(input.isKeyDown(fe::Key::W));
+}
+
+// =====================
+// Mouse button events
+// =====================
+
+TEST(Input, MouseButtonDown) {
     fe::Input input;
     input.onMouseButton(static_cast<int>(fe::MouseButton::Right), true);
-    ASSERT_TRUE(input.isMouseButtonDown(fe::MouseButton::Right));
-    ASSERT_FALSE(input.isMouseButtonDown(fe::MouseButton::Left));
+    EXPECT_TRUE(input.isMouseButtonDown(fe::MouseButton::Right));
+    EXPECT_FALSE(input.isMouseButtonDown(fe::MouseButton::Left));
 }
 
-TEST(Input_MouseMove_UpdatesPosition) {
+TEST(Input, MouseButtonPressed_FrameTransition) {
+    fe::Input input;
+    input.onMouseButton(static_cast<int>(fe::MouseButton::Left), true);
+    EXPECT_TRUE(input.isMouseButtonPressed(fe::MouseButton::Left));
+
+    input.beginFrame();
+    EXPECT_FALSE(input.isMouseButtonPressed(fe::MouseButton::Left));
+    EXPECT_TRUE(input.isMouseButtonDown(fe::MouseButton::Left));
+}
+
+TEST(Input, MouseButtonReleased_FrameTransition) {
+    fe::Input input;
+    input.onMouseButton(static_cast<int>(fe::MouseButton::Left), true);
+    input.beginFrame();
+
+    input.onMouseButton(static_cast<int>(fe::MouseButton::Left), false);
+    EXPECT_TRUE(input.isMouseButtonReleased(fe::MouseButton::Left));
+
+    input.beginFrame();
+    EXPECT_FALSE(input.isMouseButtonReleased(fe::MouseButton::Left));
+}
+
+// =====================
+// Mouse movement
+// =====================
+
+TEST(Input, MouseMove_UpdatesPosition) {
     fe::Input input;
     input.onMouseMove(100.0f, 200.0f, 5.0f, -3.0f);
     auto pos = input.getMousePosition();
-    ASSERT_NEAR(pos.x, 100.0f, 1e-6f);
-    ASSERT_NEAR(pos.y, 200.0f, 1e-6f);
+    EXPECT_FLOAT_EQ(pos.x, 100.0f);
+    EXPECT_FLOAT_EQ(pos.y, 200.0f);
     auto delta = input.getMouseDelta();
-    ASSERT_NEAR(delta.x, 5.0f, 1e-6f);
-    ASSERT_NEAR(delta.y, -3.0f, 1e-6f);
+    EXPECT_FLOAT_EQ(delta.x, 5.0f);
+    EXPECT_FLOAT_EQ(delta.y, -3.0f);
 }
 
-TEST(Input_MouseScroll) {
+TEST(Input, MouseMove_PositionPersistsAfterBeginFrame) {
+    fe::Input input;
+    input.onMouseMove(100.0f, 200.0f, 5.0f, -3.0f);
+    input.beginFrame();
+
+    auto pos = input.getMousePosition();
+    EXPECT_FLOAT_EQ(pos.x, 100.0f);
+    EXPECT_FLOAT_EQ(pos.y, 200.0f);
+}
+
+// =====================
+// Mouse scroll
+// =====================
+
+TEST(Input, MouseScroll) {
     fe::Input input;
     input.onMouseScroll(0.0f, 3.0f);
     auto scroll = input.getScrollDelta();
-    ASSERT_NEAR(scroll.x, 0.0f, 1e-6f);
-    ASSERT_NEAR(scroll.y, 3.0f, 1e-6f);
+    EXPECT_FLOAT_EQ(scroll.x, 0.0f);
+    EXPECT_FLOAT_EQ(scroll.y, 3.0f);
 }
 
-TEST(Input_BeginFrame_ClearsDeltas) {
+// =====================
+// Frame reset
+// =====================
+
+TEST(Input, BeginFrame_ClearsDeltas) {
     fe::Input input;
     input.onMouseMove(100.0f, 200.0f, 5.0f, -3.0f);
     input.onMouseScroll(1.0f, 2.0f);
     input.beginFrame();
+
     auto delta = input.getMouseDelta();
-    ASSERT_NEAR(delta.x, 0.0f, 1e-6f);
-    ASSERT_NEAR(delta.y, 0.0f, 1e-6f);
+    EXPECT_FLOAT_EQ(delta.x, 0.0f);
+    EXPECT_FLOAT_EQ(delta.y, 0.0f);
+
     auto scroll = input.getScrollDelta();
-    ASSERT_NEAR(scroll.x, 0.0f, 1e-6f);
-    ASSERT_NEAR(scroll.y, 0.0f, 1e-6f);
+    EXPECT_FLOAT_EQ(scroll.x, 0.0f);
+    EXPECT_FLOAT_EQ(scroll.y, 0.0f);
 }
 
-int main() {
-    return runAllTests();
+TEST(Input, BeginFrame_ClearsAllPerFrameState) {
+    fe::Input input;
+    // Press key, button, move, scroll
+    input.onKeyEvent(static_cast<int>(fe::Key::W), true);
+    input.onMouseButton(static_cast<int>(fe::MouseButton::Left), true);
+    input.onMouseMove(50.0f, 60.0f, 10.0f, 20.0f);
+    input.onMouseScroll(1.0f, -1.0f);
+
+    input.beginFrame();
+
+    // Per-frame state should be cleared
+    EXPECT_FALSE(input.isKeyPressed(fe::Key::W));
+    EXPECT_FALSE(input.isMouseButtonPressed(fe::MouseButton::Left));
+    EXPECT_FLOAT_EQ(input.getMouseDelta().x, 0.0f);
+    EXPECT_FLOAT_EQ(input.getScrollDelta().y, 0.0f);
+
+    // Persistent state should remain
+    EXPECT_TRUE(input.isKeyDown(fe::Key::W));
+    EXPECT_TRUE(input.isMouseButtonDown(fe::MouseButton::Left));
+    EXPECT_FLOAT_EQ(input.getMousePosition().x, 50.0f);
 }

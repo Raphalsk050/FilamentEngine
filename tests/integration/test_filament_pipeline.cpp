@@ -1,7 +1,6 @@
 // Integration test: minimal Filament pipeline
 // Tests engine creation, resource building, and rendering without a window.
-// This helps isolate handle corruption issues.
-#include "../test_helpers.h"
+#include <gtest/gtest.h>
 
 #include <filament/Engine.h>
 #include <filament/Renderer.h>
@@ -38,23 +37,22 @@ static std::vector<uint8_t> loadFile(const char* path) {
     return data;
 }
 
-TEST(FilamentEngine_CreateAndDestroy) {
+TEST(FilamentPipeline, CreateAndDestroy) {
     auto* engine = filament::Engine::create(filament::Engine::Backend::METAL);
-    ASSERT_NOT_NULL(engine);
+    ASSERT_NE(engine, nullptr);
 
     auto* renderer = engine->createRenderer();
-    ASSERT_NOT_NULL(renderer);
+    ASSERT_NE(renderer, nullptr);
 
     auto* scene = engine->createScene();
-    ASSERT_NOT_NULL(scene);
+    ASSERT_NE(scene, nullptr);
 
     auto* view = engine->createView();
-    ASSERT_NOT_NULL(view);
+    ASSERT_NE(view, nullptr);
 
-    // Create camera entity
     auto cameraEntity = utils::EntityManager::get().create();
     auto* camera = engine->createCamera(cameraEntity);
-    ASSERT_NOT_NULL(camera);
+    ASSERT_NE(camera, nullptr);
 
     view->setScene(scene);
     view->setCamera(camera);
@@ -68,32 +66,29 @@ TEST(FilamentEngine_CreateAndDestroy) {
     filament::Engine::destroy(&engine);
 }
 
-TEST(FilamentEngine_CreateSkybox) {
+TEST(FilamentPipeline, CreateSkybox) {
     auto* engine = filament::Engine::create(filament::Engine::Backend::METAL);
-    ASSERT_NOT_NULL(engine);
+    ASSERT_NE(engine, nullptr);
 
     auto* scene = engine->createScene();
 
-    // Create and set a solid-color skybox
     auto* skybox = filament::Skybox::Builder()
         .color({0.1f, 0.1f, 0.2f, 1.0f})
         .build(*engine);
-    ASSERT_NOT_NULL(skybox);
+    ASSERT_NE(skybox, nullptr);
     scene->setSkybox(skybox);
 
-    // Cleanup
     engine->destroy(skybox);
     engine->destroy(scene);
     filament::Engine::destroy(&engine);
 }
 
-TEST(FilamentEngine_CreateDirectionalLight) {
+TEST(FilamentPipeline, CreateDirectionalLight) {
     auto* engine = filament::Engine::create(filament::Engine::Backend::METAL);
-    ASSERT_NOT_NULL(engine);
+    ASSERT_NE(engine, nullptr);
 
     auto* scene = engine->createScene();
 
-    // Create a directional light entity
     auto lightEntity = utils::EntityManager::get().create();
     filament::LightManager::Builder(filament::LightManager::Type::DIRECTIONAL)
         .color({1.0f, 1.0f, 0.95f})
@@ -104,17 +99,14 @@ TEST(FilamentEngine_CreateDirectionalLight) {
 
     scene->addEntity(lightEntity);
 
-    // Verify the light was created
     auto& lightMgr = engine->getLightManager();
     auto instance = lightMgr.getInstance(lightEntity);
-    ASSERT_TRUE(instance.isValid());
+    EXPECT_TRUE(instance.isValid());
 
-    // Update the light direction (what we do in LightSystem)
     lightMgr.setDirection(instance, {0, -1, 0});
     lightMgr.setColor(instance, {1.0f, 0.8f, 0.6f});
     lightMgr.setIntensity(instance, 50000.0f);
 
-    // Cleanup
     scene->remove(lightEntity);
     engine->destroy(lightEntity);
     utils::EntityManager::get().destroy(lightEntity);
@@ -122,39 +114,30 @@ TEST(FilamentEngine_CreateDirectionalLight) {
     filament::Engine::destroy(&engine);
 }
 
-TEST(FilamentEngine_CreateCubeRenderable) {
+TEST(FilamentPipeline, CreateCubeRenderable) {
     auto* engine = filament::Engine::create(filament::Engine::Backend::METAL);
-    ASSERT_NOT_NULL(engine);
+    ASSERT_NE(engine, nullptr);
 
     auto* scene = engine->createScene();
 
-    // Create a cube mesh
     auto cube = fe::Mesh::createCube(*engine, 0.5f);
-    ASSERT_NOT_NULL(cube.vertexBuffer);
-    ASSERT_NOT_NULL(cube.indexBuffer);
-    ASSERT_GT(cube.indexCount, 0u);
+    ASSERT_NE(cube.vertexBuffer, nullptr);
+    ASSERT_NE(cube.indexBuffer, nullptr);
+    EXPECT_GT(cube.indexCount, 0u);
 
-    // Load material (needs filamat file)
     auto materialData = loadFile("materials/standard_lit.filamat");
     if (materialData.empty()) {
-        printf("  SKIP: standard_lit.filamat not found (run from build/sandbox dir)\n");
-        // Cleanup mesh
-        engine->destroy(cube.vertexBuffer);
-        engine->destroy(cube.indexBuffer);
-        engine->destroy(scene);
-        filament::Engine::destroy(&engine);
-        return;
+        GTEST_SKIP() << "standard_lit.filamat not found (run from build/sandbox dir)";
     }
 
     auto* material = filament::Material::Builder()
         .package(materialData.data(), materialData.size())
         .build(*engine);
-    ASSERT_NOT_NULL(material);
+    ASSERT_NE(material, nullptr);
 
     auto* instance = material->createInstance();
-    ASSERT_NOT_NULL(instance);
+    ASSERT_NE(instance, nullptr);
 
-    // Create an entity and build renderable
     auto entity = utils::EntityManager::get().create();
     filament::RenderableManager::Builder(1)
         .boundingBox(cube.boundingBox)
@@ -168,7 +151,6 @@ TEST(FilamentEngine_CreateCubeRenderable) {
 
     scene->addEntity(entity);
 
-    // Cleanup
     scene->remove(entity);
     engine->destroy(entity);
     utils::EntityManager::get().destroy(entity);
@@ -180,43 +162,37 @@ TEST(FilamentEngine_CreateCubeRenderable) {
     filament::Engine::destroy(&engine);
 }
 
-TEST(FilamentEngine_TwoRenderables_SameMaterial) {
-    // Test creating two renderables from the same material file
-    // (simulates cube + ground plane scenario)
+TEST(FilamentPipeline, TwoRenderables_SameMaterial) {
     auto* engine = filament::Engine::create(filament::Engine::Backend::METAL);
-    ASSERT_NOT_NULL(engine);
+    ASSERT_NE(engine, nullptr);
 
     auto* scene = engine->createScene();
 
     auto materialData = loadFile("materials/standard_lit.filamat");
     if (materialData.empty()) {
-        printf("  SKIP: standard_lit.filamat not found\n");
         engine->destroy(scene);
         filament::Engine::destroy(&engine);
-        return;
+        GTEST_SKIP() << "standard_lit.filamat not found";
     }
 
-    // Create TWO materials from the SAME data (like our sandbox does)
     auto* material1 = filament::Material::Builder()
         .package(materialData.data(), materialData.size())
         .build(*engine);
-    ASSERT_NOT_NULL(material1);
+    ASSERT_NE(material1, nullptr);
 
     auto* material2 = filament::Material::Builder()
         .package(materialData.data(), materialData.size())
         .build(*engine);
-    ASSERT_NOT_NULL(material2);
+    ASSERT_NE(material2, nullptr);
 
     auto* instance1 = material1->createInstance();
     auto* instance2 = material2->createInstance();
-    ASSERT_NOT_NULL(instance1);
-    ASSERT_NOT_NULL(instance2);
+    ASSERT_NE(instance1, nullptr);
+    ASSERT_NE(instance2, nullptr);
 
-    // Create two cubes (mesh data)
     auto cube1 = fe::Mesh::createCube(*engine, 0.5f);
     auto cube2 = fe::Mesh::createCube(*engine, 5.0f);
 
-    // Create two entities
     auto entity1 = utils::EntityManager::get().create();
     auto entity2 = utils::EntityManager::get().create();
 
@@ -239,7 +215,6 @@ TEST(FilamentEngine_TwoRenderables_SameMaterial) {
     scene->addEntity(entity1);
     scene->addEntity(entity2);
 
-    // Set up a basic view + camera for rendering
     auto cameraEntity = utils::EntityManager::get().create();
     auto* camera = engine->createCamera(cameraEntity);
     auto* view = engine->createView();
@@ -247,10 +222,6 @@ TEST(FilamentEngine_TwoRenderables_SameMaterial) {
     view->setCamera(camera);
 
     auto* renderer = engine->createRenderer();
-
-    // Try to render a frame (headless - no swap chain)
-    // This tests if the pipeline crashes with two renderables
-    printf("  Two renderables created and added to scene OK\n");
 
     // Cleanup
     engine->destroyCameraComponent(cameraEntity);
@@ -275,8 +246,4 @@ TEST(FilamentEngine_TwoRenderables_SameMaterial) {
     engine->destroy(cube2.indexBuffer);
     engine->destroy(scene);
     filament::Engine::destroy(&engine);
-}
-
-int main() {
-    return runAllTests();
 }

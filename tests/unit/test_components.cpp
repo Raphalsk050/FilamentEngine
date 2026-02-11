@@ -1,92 +1,212 @@
 // Unit tests for ECS Components
-#include "../test_helpers.h"
+// NOTE: EnTT headers must be included BEFORE GTest to avoid
+// entt_traits<long long> template instantiation conflict.
 #include <filament_engine/ecs/components.h>
+#include <gtest/gtest.h>
 
-TEST(TransformComponent_DefaultValues) {
+// =====================
+// TransformComponent
+// =====================
+
+TEST(TransformComponent, DefaultValues) {
     fe::TransformComponent t;
-    ASSERT_NEAR(t.position.x, 0.0f, 1e-6f);
-    ASSERT_NEAR(t.position.y, 0.0f, 1e-6f);
-    ASSERT_NEAR(t.position.z, 0.0f, 1e-6f);
-    ASSERT_NEAR(t.scale.x, 1.0f, 1e-6f);
-    ASSERT_NEAR(t.scale.y, 1.0f, 1e-6f);
-    ASSERT_NEAR(t.scale.z, 1.0f, 1e-6f);
-    ASSERT_TRUE(t.dirty);
-    ASSERT_EQ(t.parent, entt::null);
+    EXPECT_FLOAT_EQ(t.position.x, 0.0f);
+    EXPECT_FLOAT_EQ(t.position.y, 0.0f);
+    EXPECT_FLOAT_EQ(t.position.z, 0.0f);
+    EXPECT_FLOAT_EQ(t.scale.x, 1.0f);
+    EXPECT_FLOAT_EQ(t.scale.y, 1.0f);
+    EXPECT_FLOAT_EQ(t.scale.z, 1.0f);
+    EXPECT_TRUE(t.dirty);
+    EXPECT_TRUE(t.parent == entt::null);
 }
 
-TEST(TransformComponent_ModifyPosition) {
+TEST(TransformComponent, IdentityRotation) {
+    fe::TransformComponent t;
+    // Identity quaternion: w=1, x=0, y=0, z=0
+    EXPECT_FLOAT_EQ(t.rotation.w, 1.0f);
+    EXPECT_FLOAT_EQ(t.rotation.x, 0.0f);
+    EXPECT_FLOAT_EQ(t.rotation.y, 0.0f);
+    EXPECT_FLOAT_EQ(t.rotation.z, 0.0f);
+}
+
+TEST(TransformComponent, ModifyPosition) {
     fe::TransformComponent t;
     t.position = {1.0f, 2.0f, 3.0f};
-    ASSERT_NEAR(t.position.x, 1.0f, 1e-6f);
-    ASSERT_NEAR(t.position.y, 2.0f, 1e-6f);
-    ASSERT_NEAR(t.position.z, 3.0f, 1e-6f);
+    EXPECT_FLOAT_EQ(t.position.x, 1.0f);
+    EXPECT_FLOAT_EQ(t.position.y, 2.0f);
+    EXPECT_FLOAT_EQ(t.position.z, 3.0f);
 }
 
-TEST(TransformComponent_ModifyScale) {
+TEST(TransformComponent, ModifyScale) {
     fe::TransformComponent t;
     t.scale = {2.0f, 3.0f, 4.0f};
-    ASSERT_NEAR(t.scale.x, 2.0f, 1e-6f);
-    ASSERT_NEAR(t.scale.y, 3.0f, 1e-6f);
-    ASSERT_NEAR(t.scale.z, 4.0f, 1e-6f);
+    EXPECT_FLOAT_EQ(t.scale.x, 2.0f);
+    EXPECT_FLOAT_EQ(t.scale.y, 3.0f);
+    EXPECT_FLOAT_EQ(t.scale.z, 4.0f);
 }
 
-TEST(TransformComponent_DirtyFlag) {
+TEST(TransformComponent, DirtyFlag_InitiallyTrue) {
     fe::TransformComponent t;
-    ASSERT_TRUE(t.dirty);
+    EXPECT_TRUE(t.dirty);
+}
+
+TEST(TransformComponent, DirtyFlag_CanBeClearedAndSet) {
+    fe::TransformComponent t;
     t.dirty = false;
-    ASSERT_FALSE(t.dirty);
+    EXPECT_FALSE(t.dirty);
+    t.dirty = true;
+    EXPECT_TRUE(t.dirty);
 }
 
-TEST(CameraComponent_DefaultValues) {
+TEST(TransformComponent, Parent_DefaultNull) {
+    fe::TransformComponent t;
+    EXPECT_TRUE(t.parent == entt::null);
+}
+
+TEST(TransformComponent, Parent_CanBeAssigned) {
+    entt::registry reg;
+    auto parentEntity = reg.create();
+
+    fe::TransformComponent t;
+    t.parent = parentEntity;
+    EXPECT_TRUE(t.parent != entt::null);
+    EXPECT_TRUE(t.parent == parentEntity);
+}
+
+// =====================
+// TagComponent
+// =====================
+
+TEST(TagComponent, CanSetName) {
+    fe::TagComponent tag;
+    tag.name = "TestEntity";
+    EXPECT_EQ(tag.name, "TestEntity");
+}
+
+TEST(TagComponent, EmptyByDefault) {
+    fe::TagComponent tag;
+    EXPECT_TRUE(tag.name.empty());
+}
+
+// =====================
+// CameraComponent
+// =====================
+
+TEST(CameraComponent, DefaultValues) {
     fe::CameraComponent cam;
-    ASSERT_NEAR(cam.fov, 60.0f, 1e-6f);
-    ASSERT_NEAR(cam.nearPlane, 0.1f, 1e-6f);
-    ASSERT_NEAR(cam.farPlane, 1000.0f, 1e-6f);
-    ASSERT_FALSE(cam.isActive);
-    ASSERT_TRUE(cam.dirty);
+    EXPECT_FLOAT_EQ(cam.fov, 60.0f);
+    EXPECT_FLOAT_EQ(cam.nearPlane, 0.1f);
+    EXPECT_FLOAT_EQ(cam.farPlane, 1000.0f);
+    EXPECT_FALSE(cam.isActive);
+    EXPECT_TRUE(cam.dirty);
 }
 
-TEST(CameraComponent_SetActive) {
+TEST(CameraComponent, SetActive) {
     fe::CameraComponent cam;
     cam.isActive = true;
-    ASSERT_TRUE(cam.isActive);
+    EXPECT_TRUE(cam.isActive);
 }
 
-TEST(LightComponent_DefaultValues) {
-    fe::LightComponent light;
-    ASSERT_EQ(light.type, fe::LightComponent::Type::Point);
-    ASSERT_NEAR(light.intensity, 100000.0f, 1e-2f);
-    ASSERT_FALSE(light.castShadows);
-    ASSERT_FALSE(light.initialized);
+TEST(CameraComponent, ModifyFOV) {
+    fe::CameraComponent cam;
+    cam.fov = 90.0f;
+    EXPECT_FLOAT_EQ(cam.fov, 90.0f);
 }
 
-TEST(LightComponent_SetType) {
-    fe::LightComponent light;
-    light.type = fe::LightComponent::Type::Point;
-    ASSERT_EQ(light.type, fe::LightComponent::Type::Point);
+TEST(CameraComponent, ModifyClipPlanes) {
+    fe::CameraComponent cam;
+    cam.nearPlane = 0.5f;
+    cam.farPlane = 500.0f;
+    EXPECT_FLOAT_EQ(cam.nearPlane, 0.5f);
+    EXPECT_FLOAT_EQ(cam.farPlane, 500.0f);
+}
 
+// =====================
+// LightComponent
+// =====================
+
+TEST(LightComponent, DefaultValues) {
+    fe::LightComponent light;
+    EXPECT_EQ(light.type, fe::LightComponent::Type::Point);
+    EXPECT_FLOAT_EQ(light.intensity, 100000.0f);
+    EXPECT_FALSE(light.castShadows);
+    EXPECT_FALSE(light.initialized);
+}
+
+TEST(LightComponent, SetType_Directional) {
+    fe::LightComponent light;
+    light.type = fe::LightComponent::Type::Directional;
+    EXPECT_EQ(light.type, fe::LightComponent::Type::Directional);
+}
+
+TEST(LightComponent, SetType_Spot) {
+    fe::LightComponent light;
     light.type = fe::LightComponent::Type::Spot;
-    ASSERT_EQ(light.type, fe::LightComponent::Type::Spot);
+    EXPECT_EQ(light.type, fe::LightComponent::Type::Spot);
 }
 
-TEST(LightComponent_SetColor) {
+TEST(LightComponent, SpotAngles_Default) {
+    fe::LightComponent light;
+    EXPECT_FLOAT_EQ(light.innerConeAngle, 0.0f);
+    EXPECT_FLOAT_EQ(light.outerConeAngle, 0.5f);
+}
+
+TEST(LightComponent, SpotAngles_CanModify) {
+    fe::LightComponent light;
+    light.innerConeAngle = 0.3f;
+    light.outerConeAngle = 0.8f;
+    EXPECT_FLOAT_EQ(light.innerConeAngle, 0.3f);
+    EXPECT_FLOAT_EQ(light.outerConeAngle, 0.8f);
+}
+
+TEST(LightComponent, SetColor) {
     fe::LightComponent light;
     light.color = {0.5f, 0.7f, 0.9f};
-    ASSERT_NEAR(light.color.x, 0.5f, 1e-6f);
-    ASSERT_NEAR(light.color.y, 0.7f, 1e-6f);
-    ASSERT_NEAR(light.color.z, 0.9f, 1e-6f);
+    EXPECT_FLOAT_EQ(light.color.x, 0.5f);
+    EXPECT_FLOAT_EQ(light.color.y, 0.7f);
+    EXPECT_FLOAT_EQ(light.color.z, 0.9f);
 }
 
-TEST(MeshRendererComponent_DefaultValues) {
+TEST(LightComponent, SetRadius) {
+    fe::LightComponent light;
+    EXPECT_FLOAT_EQ(light.radius, 10.0f);
+    light.radius = 25.0f;
+    EXPECT_FLOAT_EQ(light.radius, 25.0f);
+}
+
+TEST(LightComponent, CastShadows) {
+    fe::LightComponent light;
+    light.castShadows = true;
+    EXPECT_TRUE(light.castShadows);
+}
+
+// =====================
+// MeshRendererComponent
+// =====================
+
+TEST(MeshRendererComponent, DefaultValues) {
     fe::MeshRendererComponent mr;
-    ASSERT_FALSE(mr.mesh.isValid());
-    ASSERT_FALSE(mr.material.isValid());
-    ASSERT_TRUE(mr.castShadows);
-    ASSERT_TRUE(mr.receiveShadows);
-    ASSERT_FALSE(mr.initialized);
+    EXPECT_FALSE(mr.mesh.isValid());
+    EXPECT_FALSE(mr.material.isValid());
+    EXPECT_TRUE(mr.castShadows);
+    EXPECT_TRUE(mr.receiveShadows);
+    EXPECT_FALSE(mr.initialized);
 }
 
+TEST(MeshRendererComponent, ToggleShadows) {
+    fe::MeshRendererComponent mr;
+    mr.castShadows = false;
+    mr.receiveShadows = false;
+    EXPECT_FALSE(mr.castShadows);
+    EXPECT_FALSE(mr.receiveShadows);
+}
 
-int main() {
-    return runAllTests();
+TEST(MeshRendererComponent, SetValidHandles) {
+    fe::MeshRendererComponent mr;
+    mr.mesh = fe::ResourceHandle<fe::Mesh>(1);
+    mr.material = fe::ResourceHandle<fe::MaterialWrapper>(2);
+    EXPECT_TRUE(mr.mesh.isValid());
+    EXPECT_TRUE(mr.material.isValid());
+    EXPECT_EQ(mr.mesh.getId(), 1u);
+    EXPECT_EQ(mr.material.getId(), 2u);
 }
