@@ -1,0 +1,61 @@
+# ======================
+# Build artifacts
+# ======================
+build/
+cmake-build-*/
+out/
+
+# ======================
+# IDE / Editor files
+# ======================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ======================
+# Compiled objects / binaries
+# ======================
+*.o
+*.obj
+*.a
+*.lib
+*.so
+*.dylib
+*.dll
+*.exe
+*.out
+
+# ======================
+# CMake generated
+# ======================
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+CTestTestfile.cmake
+Testing/
+install_manifest.txt
+compile_commands.json
+
+# ======================
+# Vendor build outputs
+# ======================
+vendor/filament/out/
+
+# ======================
+# Package managers
+# ======================
+_deps/
+
+# ======================
+# OS generated
+# ======================
+.DS_Store
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Desktop.ini
