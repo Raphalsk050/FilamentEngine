@@ -11,33 +11,17 @@ The idea is to have a thin layer that handles window management, input, scene hi
 - **Platform abstraction**: SDL2 handles windowing and input. Graphics backend is auto-selected per platform (Metal on macOS, Vulkan on Linux).
 - **Editor camera**: built-in FPS-style camera with WASD + mouse look for quick scene inspection.
 
-## Project structure
+## Project layout
 
-```
-filament_engine/
-├── engine/                 # Core library (libfilament_engine_lib.a)
-│   ├── include/            #   Public headers
-│   │   └── filament_engine/
-│   │       ├── core/       #     Application, Window, Input, Clock, EventBus, Log
-│   │       ├── ecs/        #     World, Components, EntityBridge, Systems
-│   │       ├── math/       #     Type aliases for Filament's math
-│   │       ├── rendering/  #     RenderContext (wraps Filament Engine/Renderer/Scene/View)
-│   │       └── resources/  #     Mesh, Material, ResourceHandle, ResourceManager
-│   └── src/                #   Implementation
-├── sandbox/                # Demo app (rotating cube with PBR + shadows)
-├── materials/              # Material source files (.mat)
-├── tests/
-│   ├── unit/               # Unit tests (GTest)
-│   └── integration/        # Integration tests (need GPU)
-├── scripts/
-│   ├── setup.sh            # Downloads dependencies + configures CMake
-│   └── compile_materials.sh# Standalone material compiler
-├── cmake/
-│   └── FilamentMaterials.cmake  # CMake module for .mat → .filamat
-└── vendor/                 # Third-party (gitignored, populated by setup.sh)
-    ├── filament/           #   Pre-built Filament distribution
-    └── entt/               #   EnTT (header-only)
-```
+| Directory | What's in there |
+|---|---|
+| `engine/` | Core library. Headers in `include/filament_engine/`, implementation in `src/`. Organized by subsystem: `core/`, `ecs/`, `rendering/`, `resources/`. |
+| `sandbox/` | Demo app — a rotating PBR cube with shadows and IBL lighting. |
+| `materials/` | Filament material source files (`.mat`). Compiled to `.filamat` during build. |
+| `tests/` | Unit tests (GTest) and integration tests. |
+| `scripts/` | `setup.sh` (dependency setup), `compile_materials.sh` (standalone matc wrapper). |
+| `cmake/` | CMake modules, including the material compilation rules. |
+| `vendor/` | Third-party deps (gitignored, populated by `setup.sh`). |
 
 ## Requirements
 
