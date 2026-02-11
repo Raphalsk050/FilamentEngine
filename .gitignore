@@ -59,3 +59,8 @@ _deps/
 .Trashes
 ehthumbs.db
 Desktop.ini
+
+# ======================
+# Vendor dependencies (managed by scripts/setup.sh)
+# ======================
+vendor/
