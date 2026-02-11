@@ -2,15 +2,49 @@
 #include <filament_engine/ecs/world.h>
 #include <filament_engine/ecs/components.h>
 #include <filament_engine/core/input.h>
+#include <filament_engine/core/input_map.h>
 
 #include <cmath>
 #include <algorithm>
 
 namespace fe {
 
+void EditorCameraSystem::init(World& world) {
+    auto& map = world.getInputMap();
+
+    // Horizontal strafe: A(-1) / D(+1)
+    auto& moveX = map.createAction("EditorMoveX", InputActionType::Axis1D);
+    moveX.addBinding({InputSource::Key, Key::D, {}, 1.0f});
+    moveX.addBinding({InputSource::Key, Key::A, {}, -1.0f});
+
+    // Vertical movement: E(+1) / Q(-1)
+    auto& moveY = map.createAction("EditorMoveY", InputActionType::Axis1D);
+    moveY.addBinding({InputSource::Key, Key::E, {}, 1.0f});
+    moveY.addBinding({InputSource::Key, Key::Q, {}, -1.0f});
+
+    // Forward/backward: W(+1) / S(-1)
+    auto& moveZ = map.createAction("EditorMoveZ", InputActionType::Axis1D);
+    moveZ.addBinding({InputSource::Key, Key::W, {}, 1.0f});
+    moveZ.addBinding({InputSource::Key, Key::S, {}, -1.0f});
+
+    // Mouse look toggle: right mouse button
+    auto& look = map.createAction("EditorLook", InputActionType::Digital);
+    look.addBinding({InputSource::MouseButton, Key::Unknown, MouseButton::Right});
+
+    // Sprint modifier: left/right shift
+    auto& fast = map.createAction("EditorFast", InputActionType::Digital);
+    fast.addBinding({InputSource::Key, Key::LShift});
+    fast.addBinding({InputSource::Key, Key::RShift});
+
+    // Speed adjustment: scroll wheel Y
+    auto& speed = map.createAction("EditorSpeed", InputActionType::Axis1D);
+    speed.addBinding({InputSource::ScrollY, Key::Unknown, {}, 1.0f});
+}
+
 void EditorCameraSystem::update(World& world, float dt) {
     auto& registry = world.getRegistry();
     auto& input = world.getInput();
+    auto& map = world.getInputMap();
 
     auto view = registry.view<CameraComponent, TransformComponent>();
     for (auto entity : view) {
@@ -21,7 +55,6 @@ void EditorCameraSystem::update(World& world, float dt) {
 
         // Initialize yaw/pitch from current transform on first frame
         if (!m_initialized) {
-            // Extract yaw and pitch from the current rotation quaternion
             auto rotMat = filament::math::mat3f(transform.rotation);
             Vec3 forward = rotMat * Vec3{0, 0, -1};
 
@@ -31,14 +64,14 @@ void EditorCameraSystem::update(World& world, float dt) {
         }
 
         // Adjust movement speed with scroll wheel
-        float scrollY = input.getScrollDelta().y;
-        if (scrollY != 0.0f) {
-            movementSpeed += scrollY * scrollSpeedStep;
+        float scrollValue = map.getAxis("EditorSpeed");
+        if (scrollValue != 0.0f) {
+            movementSpeed += scrollValue * scrollSpeedStep;
             movementSpeed = std::max(0.5f, movementSpeed);
         }
 
-        // Mouse look: only when right mouse button is held
-        if (input.isMouseButtonDown(MouseButton::Right)) {
+        // Mouse look: only when EditorLook action is held (right mouse button)
+        if (map.isHeld("EditorLook")) {
             Vec2 mouseDelta = input.getMouseDelta();
             m_yaw += mouseDelta.x * mouseSensitivity;
             m_pitch -= mouseDelta.y * mouseSensitivity;
@@ -62,22 +95,23 @@ void EditorCameraSystem::update(World& world, float dt) {
         Vec3 right = rotMat * Vec3{1, 0, 0};
         Vec3 up = Vec3{0, 1, 0}; // world up for consistent movement
 
-        // Calculate current speed (with shift multiplier)
+        // Calculate current speed (with sprint modifier)
         float speed = movementSpeed;
-        if (input.isKeyDown(Key::LShift) || input.isKeyDown(Key::RShift)) {
+        if (map.isHeld("EditorFast")) {
             speed *= fastMultiplier;
         }
 
-        // WASD movement
-        Vec3 movement{0, 0, 0};
-        if (input.isKeyDown(Key::W)) movement += forward;
-        if (input.isKeyDown(Key::S)) movement -= forward;
-        if (input.isKeyDown(Key::A)) movement -= right;
-        if (input.isKeyDown(Key::D)) movement += right;
-        if (input.isKeyDown(Key::Q)) movement -= up;
-        if (input.isKeyDown(Key::E)) movement += up;
+        // Movement driven by InputActions instead of raw keys
+        float moveX = map.getAxis("EditorMoveX");
+        float moveY = map.getAxis("EditorMoveY");
+        float moveZ = map.getAxis("EditorMoveZ");
 
-        // Apply movement if any key is pressed
+        Vec3 movement{0, 0, 0};
+        movement += forward * moveZ;  // W/S
+        movement += right * moveX;    // A/D
+        movement += up * moveY;       // Q/E
+
+        // Apply movement if any axis is active
         float lengthSq = movement.x * movement.x + movement.y * movement.y + movement.z * movement.z;
         if (lengthSq > 0.0f) {
             float length = std::sqrt(lengthSq);

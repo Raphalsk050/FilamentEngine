@@ -1,0 +1,22 @@
+material {
+    name : "Debug Lines",
+    shadingModel : unlit,
+    parameters : [],
+    requires : [
+        color
+    ],
+    depthWrite : false,
+    doubleSided : true
+}
+
+vertex {
+    void materialVertex(inout MaterialVertexInputs material) {
+    }
+}
+
+fragment {
+    void material(inout MaterialInputs material) {
+        prepareMaterial(material);
+        material.baseColor = getColor();
+    }
+}

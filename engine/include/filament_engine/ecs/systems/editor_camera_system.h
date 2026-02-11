@@ -7,12 +7,21 @@ namespace fe {
 class Input;
 
 // Editor-style camera controller system.
-// Provides FPS-like camera movement with WASD keys and mouse look (right-click drag).
-// Scroll wheel adjusts movement speed. Shift for fast movement.
+// Provides FPS-like camera movement and mouse look (right-click drag).
+// Uses InputActions for all bindings — keys can be remapped via InputMap.
+//
+// Registered actions (created in init()):
+//   "EditorMoveX"     — A/D (Axis1D: -1..+1)
+//   "EditorMoveY"     — Q/E (Axis1D: -1..+1)
+//   "EditorMoveZ"     — W/S (Axis1D: -1..+1, forward/backward)
+//   "EditorLook"      — Right mouse button (Digital)
+//   "EditorFast"      — Left Shift (Digital)
+//   "EditorSpeed"     — Scroll wheel (Axis1D)
 class EditorCameraSystem : public System {
 public:
     EditorCameraSystem() { priority = 290; } // runs before CameraSystem (300)
 
+    void init(World& world) override;
     void update(World& world, float dt) override;
 
     // Configuration
