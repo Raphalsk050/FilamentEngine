@@ -90,6 +90,10 @@ target_link_libraries(test_filament_pipeline PRIVATE
     GTest::gtest_main
     filament_engine_lib
 )
-gtest_discover_tests(test_filament_pipeline
+# Use add_test instead of gtest_discover_tests for integration tests.
+# Discovery would try to run the binary at build time, which needs GPU and hangs.
+add_test(
+    NAME test_filament_pipeline
+    COMMAND test_filament_pipeline
     WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/sandbox"
 )
