@@ -1,0 +1,20 @@
+material {
+    name : "Unlit Color",
+    shadingModel : unlit,
+    parameters : [
+        {
+            type : float4,
+            name : baseColor
+        }
+    ],
+    requires : [
+        uv0
+    ]
+}
+
+fragment {
+    void material(inout MaterialInputs material) {
+        prepareMaterial(material);
+        material.baseColor = materialParams.baseColor;
+    }
+}
