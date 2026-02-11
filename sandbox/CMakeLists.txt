@@ -1,25 +1,14 @@
 # Sandbox executable
 
-set(MATC_TOOL "${FILAMENT_DIST_DIR}/bin/matc")
+# Include the materials compilation module
+include(${CMAKE_SOURCE_DIR}/cmake/FilamentMaterials.cmake)
 
-# Material compilation setup
-set(MATERIAL_DIR "${CMAKE_SOURCE_DIR}/materials")
-set(MATERIAL_OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/materials")
-file(MAKE_DIRECTORY "${MATERIAL_OUTPUT_DIR}")
-
-# Compile standard_lit.mat → standard_lit.filamat
-set(STANDARD_LIT_MAT "${MATERIAL_DIR}/standard_lit.mat")
-set(STANDARD_LIT_FILAMAT "${MATERIAL_OUTPUT_DIR}/standard_lit.filamat")
-
-add_custom_command(
-    OUTPUT "${STANDARD_LIT_FILAMAT}"
-    COMMAND "${MATC_TOOL}" -a vulkan -a opengl -a metal -o "${STANDARD_LIT_FILAMAT}" "${STANDARD_LIT_MAT}"
-    DEPENDS "${STANDARD_LIT_MAT}"
-    COMMENT "Compiling material: standard_lit.mat"
-    VERBATIM
+# Compile all .mat files in the materials/ directory
+compile_materials(
+    SOURCE_DIR "${CMAKE_SOURCE_DIR}/materials"
+    OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/materials"
+    TARGET_NAME sandbox_materials
 )
-
-add_custom_target(sandbox_materials DEPENDS "${STANDARD_LIT_FILAMAT}")
 
 # Sandbox target
 add_executable(sandbox main.cpp)
@@ -39,4 +28,3 @@ if(EXISTS "${IBL_SOURCE_DIR}")
         COMMENT "Copying IBL assets to build directory"
     )
 endif()
-
