@@ -8,9 +8,7 @@
 struct DummyMesh {};
 struct DummyMaterial {};
 
-// =====================
 // Construction & Validity
-// =====================
 
 TEST(ResourceHandle, DefaultConstructor_IsInvalid) {
     fe::ResourceHandle<DummyMesh> handle;
@@ -39,9 +37,7 @@ TEST(ResourceHandle, LargeId_IsValid) {
     EXPECT_EQ(handle.getId(), UINT32_MAX);
 }
 
-// =====================
 // Boolean conversion
-// =====================
 
 TEST(ResourceHandle, BoolConversion_ValidHandle) {
     fe::ResourceHandle<DummyMesh> valid(42);
@@ -53,9 +49,7 @@ TEST(ResourceHandle, BoolConversion_InvalidHandle) {
     EXPECT_FALSE(static_cast<bool>(invalid));
 }
 
-// =====================
 // Equality operators
-// =====================
 
 TEST(ResourceHandle, Equality_SameId) {
     fe::ResourceHandle<DummyMesh> a(5);
@@ -75,9 +69,7 @@ TEST(ResourceHandle, Equality_BothInvalid) {
     EXPECT_EQ(a, b);
 }
 
-// =====================
 // Type safety
-// =====================
 
 TEST(ResourceHandle, DifferentTypes_SameId_AreIndependent) {
     fe::ResourceHandle<DummyMesh> mesh(1);
@@ -90,9 +82,7 @@ TEST(ResourceHandle, DifferentTypes_SameId_AreIndependent) {
     EXPECT_TRUE(material.isValid());
 }
 
-// =====================
 // Copy semantics
-// =====================
 
 TEST(ResourceHandle, CopyConstructor) {
     fe::ResourceHandle<DummyMesh> original(42);
@@ -109,9 +99,7 @@ TEST(ResourceHandle, CopyAssignment) {
     EXPECT_EQ(original, copy);
 }
 
-// =====================
 // Hash support
-// =====================
 
 TEST(ResourceHandle, Hash_EqualHandles_SameHash) {
     fe::ResourceHandle<DummyMesh> a(10);

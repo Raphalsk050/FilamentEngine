@@ -13,8 +13,7 @@ namespace fe {
 struct Mesh;
 class MaterialWrapper;
 
-// Transform: position, rotation, scale with parent-child hierarchy support.
-// This is the source of truth — changes here are synced to Filament's TransformManager.
+// Synced to Filament's TransformManager when dirty.
 struct TransformComponent {
     Vec3 position{0, 0, 0};
     Quat rotation = Quat{1, 0, 0, 0}; // identity quaternion (w, x, y, z)
@@ -22,13 +21,9 @@ struct TransformComponent {
     entt::entity parent{entt::null};
     bool dirty = true; // set to true when the transform needs syncing to Filament
 };
-
-// Human-readable name for debugging
 struct TagComponent {
     std::string name;
 };
-
-// Marks an entity as renderable with mesh and material references
 struct MeshRendererComponent {
     ResourceHandle<Mesh> mesh;
     ResourceHandle<MaterialWrapper> material;
@@ -36,8 +31,6 @@ struct MeshRendererComponent {
     bool receiveShadows = true;
     bool initialized = false; // internal: whether Filament renderable has been created
 };
-
-// Camera parameters
 struct CameraComponent {
     float fov = 60.0f;
     float nearPlane = 0.1f;
@@ -45,8 +38,6 @@ struct CameraComponent {
     bool isActive = false;
     bool dirty = true;
 };
-
-// Light source parameters
 struct LightComponent {
     enum class Type { Directional, Point, Spot };
 

@@ -33,9 +33,7 @@ public:
     int countB = 0;
 };
 
-// =====================
 // Publish (immediate trigger)
-// =====================
 
 TEST(EventBus, Publish_TriggersMemberSubscriber) {
     fe::EventBus bus;
@@ -62,9 +60,7 @@ TEST(EventBus, Publish_MultipleEvents) {
     EXPECT_EQ(receiver.countA, 3);
 }
 
-// =====================
 // Enqueue + Update (deferred dispatch)
-// =====================
 
 TEST(EventBus, Enqueue_DoesNotTriggerImmediately) {
     fe::EventBus bus;
@@ -103,9 +99,7 @@ TEST(EventBus, Enqueue_MultipleEvents_DispatchedOnUpdate) {
     EXPECT_EQ(receiver.lastValueA, 3);
 }
 
-// =====================
 // Unsubscribe
-// =====================
 
 TEST(EventBus, Unsubscribe_StopsReceiving) {
     fe::EventBus bus;
@@ -121,9 +115,7 @@ TEST(EventBus, Unsubscribe_StopsReceiving) {
     EXPECT_EQ(receiver.lastValueA, 1);
 }
 
-// =====================
 // Multiple event types
-// =====================
 
 TEST(EventBus, MultipleEventTypes_Independent) {
     fe::EventBus bus;
@@ -143,9 +135,7 @@ TEST(EventBus, MultipleEventTypes_Independent) {
     EXPECT_FLOAT_EQ(receiver.lastY, 2.5f);
 }
 
-// =====================
 // Built-in event types
-// =====================
 
 TEST(EventBus, WindowResizeEvent) {
     fe::EventBus bus;

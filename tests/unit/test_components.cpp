@@ -4,9 +4,7 @@
 #include <filament_engine/ecs/components.h>
 #include <gtest/gtest.h>
 
-// =====================
 // TransformComponent
-// =====================
 
 TEST(TransformComponent, DefaultValues) {
     fe::TransformComponent t;
@@ -73,9 +71,7 @@ TEST(TransformComponent, Parent_CanBeAssigned) {
     EXPECT_TRUE(t.parent == parentEntity);
 }
 
-// =====================
 // TagComponent
-// =====================
 
 TEST(TagComponent, CanSetName) {
     fe::TagComponent tag;
@@ -88,9 +84,7 @@ TEST(TagComponent, EmptyByDefault) {
     EXPECT_TRUE(tag.name.empty());
 }
 
-// =====================
 // CameraComponent
-// =====================
 
 TEST(CameraComponent, DefaultValues) {
     fe::CameraComponent cam;
@@ -121,9 +115,7 @@ TEST(CameraComponent, ModifyClipPlanes) {
     EXPECT_FLOAT_EQ(cam.farPlane, 500.0f);
 }
 
-// =====================
 // LightComponent
-// =====================
 
 TEST(LightComponent, DefaultValues) {
     fe::LightComponent light;
@@ -180,9 +172,7 @@ TEST(LightComponent, CastShadows) {
     EXPECT_TRUE(light.castShadows);
 }
 
-// =====================
 // MeshRendererComponent
-// =====================
 
 TEST(MeshRendererComponent, DefaultValues) {
     fe::MeshRendererComponent mr;

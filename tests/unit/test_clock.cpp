@@ -5,9 +5,7 @@
 #include <thread>
 #include <chrono>
 
-// =====================
 // Initial state
-// =====================
 
 TEST(Clock, InitialState_DeltaTimeZero) {
     fe::Clock clock;
@@ -25,9 +23,7 @@ TEST(Clock, InitialState_FPS_Zero) {
     EXPECT_FLOAT_EQ(clock.getFPS(), 0.0f);
 }
 
-// =====================
 // Tick behavior
-// =====================
 
 TEST(Clock, Tick_ProducesPositiveDeltaTime) {
     fe::Clock clock;
@@ -69,9 +65,7 @@ TEST(Clock, Tick_DeltaTimeUpdatesEachTick) {
     EXPECT_GT(dt2, 0.0f);
 }
 
-// =====================
 // FPS calculation
-// =====================
 
 TEST(Clock, GetFPS_AfterTick_ReturnsPositive) {
     fe::Clock clock;
@@ -95,9 +89,7 @@ TEST(Clock, GetFPS_ConsistentWithDeltaTime) {
     }
 }
 
-// =====================
 // Multiple ticks
-// =====================
 
 TEST(Clock, MultipleTicks_WorkCorrectly) {
     fe::Clock clock;

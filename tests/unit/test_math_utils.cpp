@@ -17,9 +17,7 @@ static fe::Vec3 computeDirection(float yawDeg, float pitchDeg) {
     return rotMat * fe::Vec3{0, 0, -1};
 }
 
-// =====================
 // Vec3 arithmetic
-// =====================
 
 TEST(Vec3, DefaultInit) {
     fe::Vec3 v{0, 0, 0};
@@ -97,9 +95,7 @@ TEST(Vec3, Length) {
     EXPECT_NEAR(len, 5.0f, 1e-5f);
 }
 
-// =====================
 // Quaternion
-// =====================
 
 TEST(Quat, Identity) {
     fe::Quat q{1, 0, 0, 0};
@@ -122,9 +118,7 @@ TEST(Quat, YawRotation_90Degrees) {
     EXPECT_NEAR(forward.z, 0.0f, 1e-4f);
 }
 
-// =====================
 // Camera direction (yaw/pitch)
-// =====================
 
 TEST(CameraDirection, ZeroYawPitch_LooksForward) {
     fe::Vec3 dir = computeDirection(0.0f, 0.0f);
@@ -160,9 +154,7 @@ TEST(CameraDirection, PitchDown90_LooksDown) {
     EXPECT_NEAR(dir.x, 0.0f, 1e-2f);
 }
 
-// =====================
 // Mat4
-// =====================
 
 TEST(Mat4, Identity) {
     fe::Mat4 m = fe::Mat4(1.0f);

@@ -2,9 +2,7 @@
 #include <gtest/gtest.h>
 #include <filament_engine/core/input.h>
 
-// =====================
 // Default state
-// =====================
 
 TEST(Input, DefaultState_NoKeysPressed) {
     fe::Input input;
@@ -44,9 +42,7 @@ TEST(Input, DefaultState_ScrollDeltaZero) {
     EXPECT_FLOAT_EQ(scroll.y, 0.0f);
 }
 
-// =====================
 // Key events
-// =====================
 
 TEST(Input, KeyDown_ViaOnKeyEvent) {
     fe::Input input;
@@ -113,9 +109,7 @@ TEST(Input, KeyPressed_NotTriggeredOnHold) {
     EXPECT_TRUE(input.isKeyDown(fe::Key::W));
 }
 
-// =====================
 // Mouse button events
-// =====================
 
 TEST(Input, MouseButtonDown) {
     fe::Input input;
@@ -146,9 +140,7 @@ TEST(Input, MouseButtonReleased_FrameTransition) {
     EXPECT_FALSE(input.isMouseButtonReleased(fe::MouseButton::Left));
 }
 
-// =====================
 // Mouse movement
-// =====================
 
 TEST(Input, MouseMove_UpdatesPosition) {
     fe::Input input;
@@ -171,9 +163,7 @@ TEST(Input, MouseMove_PositionPersistsAfterBeginFrame) {
     EXPECT_FLOAT_EQ(pos.y, 200.0f);
 }
 
-// =====================
 // Mouse scroll
-// =====================
 
 TEST(Input, MouseScroll) {
     fe::Input input;
@@ -183,9 +173,7 @@ TEST(Input, MouseScroll) {
     EXPECT_FLOAT_EQ(scroll.y, 3.0f);
 }
 
-// =====================
 // Frame reset
-// =====================
 
 TEST(Input, BeginFrame_ClearsDeltas) {
     fe::Input input;

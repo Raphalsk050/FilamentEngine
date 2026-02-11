@@ -3,8 +3,6 @@
 #include <cmath>
 #include <fstream>
 #include <vector>
-
-// Loads a binary file into a byte vector
 static std::vector<uint8_t> loadFile(const char* path) {
     std::ifstream file(path, std::ios::binary | std::ios::ate);
     if (!file.is_open()) {
@@ -26,23 +24,15 @@ public:
         auto& world = getWorld();
         auto& renderCtx = getRenderContext();
         auto* resourceMgr = fe::ResourceManager::getInstance();
-
-        // Load IBL (skybox + indirect lighting) from generated assets
         renderCtx.loadIBL("assets/ibl");
-
-        // Create cube mesh
         auto cubeMesh = fe::Mesh::createCube(*renderCtx.getEngine(), 0.5f);
         m_cubeMeshHandle = resourceMgr->addMesh(cubeMesh);
-
-        // Load and create material from compiled .filamat file
         auto materialData = loadFile("materials/standard_lit.filamat");
         if (materialData.empty()) {
             FE_LOG_FATAL("Could not load standard_lit.filamat material");
             return;
         }
         m_materialHandle = resourceMgr->createMaterial(materialData.data(), materialData.size());
-
-        // Set material parameters for the cube
         auto* material = resourceMgr->getMaterial(m_materialHandle);
         if (material) {
             material->setBaseColor({0.8f, 0.2f, 0.2f, 1.0f}); // red
@@ -50,20 +40,14 @@ public:
             material->setRoughness(0.4f);
             material->setReflectance(0.5f);
         }
-
-        // Create the cube entity
         m_cubeEntity = world.createEntity("Cube");
         auto& meshRenderer = world.addComponent<fe::MeshRendererComponent>(m_cubeEntity);
         meshRenderer.mesh = m_cubeMeshHandle;
         meshRenderer.material = m_materialHandle;
         meshRenderer.castShadows = true;
         meshRenderer.receiveShadows = true;
-
-        // Create a ground plane for shadow visualization
         auto planeMesh = fe::Mesh::createCube(*renderCtx.getEngine(), 5.0f);
         m_planeMeshHandle = resourceMgr->addMesh(planeMesh);
-
-        // Ground plane material (grayish)
         auto planeMaterialData = loadFile("materials/standard_lit.filamat");
         m_planeMaterialHandle = resourceMgr->createMaterial(planeMaterialData.data(), planeMaterialData.size());
         auto* planeMaterial = resourceMgr->getMaterial(m_planeMaterialHandle);
@@ -81,27 +65,21 @@ public:
         planeRenderer.castShadows = false;
         planeRenderer.receiveShadows = true;
 
-        // Flatten and position the ground plane
+        // Ground plane transform
         auto& planeTransform = world.getComponent<fe::TransformComponent>(planeEntity);
         planeTransform.position = {0, -0.55f, 0};
         planeTransform.scale = {1.0f, 0.02f, 1.0f};
         planeTransform.dirty = true;
-
-        // Create a directional light (sun)
         auto lightEntity = world.createEntity("Sun");
         auto& light = world.addComponent<fe::LightComponent>(lightEntity);
         light.type = fe::LightComponent::Type::Directional;
         light.color = {1.0f, 1.0f, 0.95f};
         light.intensity = 100000.0f;
         light.castShadows = true;
-
-        // Point the light downward at an angle
         auto& lightTransform = world.getComponent<fe::TransformComponent>(lightEntity);
         lightTransform.position = {0, 5, 5};
         float angle = -0.785f; // ~45 degrees
         lightTransform.rotation = fe::Quat{std::cos(angle / 2.0f), std::sin(angle / 2.0f), 0, 0};
-
-        // Create camera entity
         auto cameraEntity = world.createEntity("Camera");
         auto& cam = world.addComponent<fe::CameraComponent>(cameraEntity);
         cam.isActive = true;

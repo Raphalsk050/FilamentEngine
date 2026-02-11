@@ -18,26 +18,19 @@ struct ApplicationConfig {
     GraphicsBackend backend = GraphicsBackend::Vulkan;
 };
 
-// Base class for engine applications.
-// Users subclass this and override onInit/onUpdate/onShutdown to build their game.
+// Subclass this and override onInit/onUpdate/onShutdown.
 class Application {
 public:
     Application(const ApplicationConfig& config = {});
     virtual ~Application();
 
-    // Non-copyable
     Application(const Application&) = delete;
     Application& operator=(const Application&) = delete;
 
-    // Main entry point: runs the game loop until window is closed
     void run();
-
-    // Override these in your application
     virtual void onInit() {}
     virtual void onUpdate(float dt) {}
     virtual void onShutdown() {}
-
-    // Access engine subsystems
     Window& getWindow() { return *m_window; }
     RenderContext& getRenderContext() { return *m_renderContext; }
     Input& getInput() { return m_input; }

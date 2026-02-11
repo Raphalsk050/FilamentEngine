@@ -15,18 +15,13 @@ namespace fe {
 
 class RenderContext;
 
-// Central ECS world: wraps entt::registry, entity bridge, and system management.
-// Provides a high-level API for creating/destroying entities with both EnTT and Filament sides.
+// Wraps entt::registry with entity bridge and system dispatch.
 class World {
 public:
     World(RenderContext& renderContext, Input& input);
     ~World();
-
-    // Entity lifecycle
     entt::entity createEntity(const std::string& name = "Entity");
     void destroyEntity(entt::entity entity);
-
-    // Component helpers (delegates to registry)
     template <typename T, typename... Args>
     T& addComponent(entt::entity entity, Args&&... args) {
         return m_registry.emplace<T>(entity, std::forward<Args>(args)...);
@@ -56,8 +51,6 @@ public:
     void removeComponent(entt::entity entity) {
         m_registry.remove<T>(entity);
     }
-
-    // System management
     template <typename T, typename... Args>
     T& registerSystem(Args&&... args) {
         auto system = std::make_unique<T>(std::forward<Args>(args)...);
@@ -72,8 +65,6 @@ public:
 
     void updateSystems(float dt);
     void shutdownSystems();
-
-    // Access internals
     entt::registry& getRegistry() { return m_registry; }
     const entt::registry& getRegistry() const { return m_registry; }
     EntityBridge& getEntityBridge() { return m_entityBridge; }

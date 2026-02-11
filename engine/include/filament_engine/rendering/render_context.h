@@ -18,54 +18,37 @@
 #include <string>
 
 namespace fe {
-
-// Graphics backend selection
 enum class GraphicsBackend {
     Vulkan,
     Metal,
     OpenGL,
     Default // Auto-detect: Metal on macOS, Vulkan on Linux/Windows
 };
-
-// Owns and manages all core Filament rendering objects
 class RenderContext {
 public:
     RenderContext(Window& window, GraphicsBackend backend = GraphicsBackend::Default);
-
-    // Returns the preferred graphics backend for the current platform
     static GraphicsBackend getPlatformDefaultBackend();
     ~RenderContext();
 
-    // Non-copyable
     RenderContext(const RenderContext&) = delete;
     RenderContext& operator=(const RenderContext&) = delete;
-
-    // Frame rendering
     bool beginFrame();
     void render();
     void endFrame();
-
-    // Handle window resize
     void resize(int width, int height);
-
-    // Accessors
     filament::Engine* getEngine() const { return m_engine; }
     filament::Renderer* getRenderer() const { return m_renderer; }
     filament::Scene* getScene() const { return m_scene; }
     filament::View* getView() const { return m_view; }
     filament::SwapChain* getSwapChain() const { return m_swapChain; }
-
-    // Convenience: access Filament managers
     filament::TransformManager& getTransformManager() const;
     filament::RenderableManager& getRenderableManager() const;
     filament::LightManager& getLightManager() const;
-
-    // Camera management
     filament::Camera* createCamera();
     void setActiveCamera(filament::Camera* camera);
     filament::Camera* getActiveCamera() const { return m_activeCamera; }
 
-    // IBL: loads KTX cubemaps from a directory containing _ibl.ktx, _skybox.ktx, and sh.txt
+    // Loads KTX cubemaps from a directory (ibl.ktx, skybox.ktx, sh.txt)
     bool loadIBL(const std::string& iblDirectory);
 
 private:

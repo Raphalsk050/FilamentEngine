@@ -2,9 +2,7 @@
 #include <gtest/gtest.h>
 #include <filament_engine/ecs/entity_bridge.h>
 
-// =====================
 // Link
-// =====================
 
 TEST(EntityBridge, Link_CreatesFilamentEntity) {
     entt::registry registry;
@@ -35,9 +33,7 @@ TEST(EntityBridge, Link_ComponentHoldsCorrectEntity) {
     EXPECT_EQ(comp.filamentEntity.getId(), filamentEntity.getId());
 }
 
-// =====================
 // HasFilamentEntity
-// =====================
 
 TEST(EntityBridge, HasFilamentEntity_FalseBeforeLink) {
     entt::registry registry;
@@ -56,9 +52,7 @@ TEST(EntityBridge, HasFilamentEntity_TrueAfterLink) {
     EXPECT_TRUE(bridge.hasFilamentEntity(registry, enttEntity));
 }
 
-// =====================
 // Lookups
-// =====================
 
 TEST(EntityBridge, GetFilamentEntity_ReturnsCorrect) {
     entt::registry registry;
@@ -98,9 +92,7 @@ TEST(EntityBridge, GetFilamentEntity_UnlinkedEntity_ReturnsDefault) {
     EXPECT_EQ(result.getId(), 0u);
 }
 
-// =====================
 // Unlink
-// =====================
 
 TEST(EntityBridge, Unlink_RemovesComponent) {
     entt::registry registry;
@@ -135,9 +127,7 @@ TEST(EntityBridge, Unlink_NonLinkedEntity_NoOp) {
     EXPECT_NO_THROW(bridge.unlink(registry, enttEntity));
 }
 
-// =====================
 // Multiple entities
-// =====================
 
 TEST(EntityBridge, MultipleEntities_IndependentLinks) {
     entt::registry registry;
