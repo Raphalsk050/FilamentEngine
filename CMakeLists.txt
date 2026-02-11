@@ -11,17 +11,25 @@ if(APPLE)
     enable_language(OBJCXX)
     set(CMAKE_OBJCXX_STANDARD 20)
     set(CMAKE_OBJCXX_STANDARD_REQUIRED ON)
+elseif(CMAKE_SYSTEM_NAME MATCHES "Linux" AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    # Filament pre-built binaries on Linux are built with libc++
+    add_compile_options(-stdlib=libc++)
+    add_link_options(-stdlib=libc++ -lc++ -lc++abi)
+elseif(MSVC)
+    add_compile_options(/MP)
 endif()
 
 # Filament pre-built distribution directory
-set(FILAMENT_DIST_DIR "${CMAKE_SOURCE_DIR}/vendor/filament/out/release/filament"
-    CACHE PATH "Path to pre-built Filament distribution")
+if(WIN32)
+    set(FILAMENT_DIST_DIR "${CMAKE_SOURCE_DIR}/vendor/filament" CACHE PATH "Path to pre-built Filament distribution")
+else()
+    set(FILAMENT_DIST_DIR "${CMAKE_SOURCE_DIR}/vendor/filament/out/release/filament" CACHE PATH "Path to pre-built Filament distribution")
+endif()
 
 if(NOT EXISTS "${FILAMENT_DIST_DIR}")
     message(FATAL_ERROR
         "Filament distribution not found at: ${FILAMENT_DIST_DIR}\n"
-        "Please build Filament first:\n"
-        "  cd vendor/filament && ./build.sh -i release")
+        "Please run setup script first.")
 endif()
 
 # EnTT (header-only)

@@ -28,3 +28,15 @@ if(EXISTS "${IBL_SOURCE_DIR}")
         COMMENT "Copying IBL assets to build directory"
     )
 endif()
+
+# Copy SDL2.dll next to the sandbox executable on Windows
+if(WIN32)
+    set(SDL2_DLL "${CMAKE_SOURCE_DIR}/vendor/SDL2/lib/x64/SDL2.dll")
+    if(EXISTS "${SDL2_DLL}")
+        add_custom_command(TARGET sandbox POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                "${SDL2_DLL}" "$<TARGET_FILE_DIR:sandbox>"
+            COMMENT "Copying SDL2.dll to output directory"
+        )
+    endif()
+endif()

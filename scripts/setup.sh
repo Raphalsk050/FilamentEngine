@@ -299,6 +299,14 @@ install_llvm_ubuntu() {
     sudo "${TMP_DIR}/llvm.sh" "${ver}"
   fi
 
+  # Explicitly install libc++ and libc++abi if using Clang
+  # This is needed even if Clang was already installed, because often dev headers are missing
+  if [[ "${PLATFORM}" == "linux" ]]; then
+     info "Ensuring libc++ dependencies are installed for Clang ${ver}..."
+     # We use DEBIAN_FRONTEND=noninteractive to avoid potential prompts
+     sudo DEBIAN_FRONTEND=noninteractive apt-get install -y "libc++-${ver}-dev" "libc++abi-${ver}-dev" || warn "Failed to install libc++ dev packages. You may need to install them manually."
+  fi
+
   if [[ "${LLVM_SYMLINK}" == true ]]; then
     section "Symlink clang -> clang-${ver}"
 

@@ -29,6 +29,9 @@ function(add_unit_test TEST_NAME SOURCE_FILE)
         GTest::gtest_main
         entt
     )
+    if(WIN32)
+        target_compile_definitions(${TEST_NAME} PRIVATE _USE_MATH_DEFINES)
+    endif()
     gtest_discover_tests(${TEST_NAME})
 endfunction()
 
