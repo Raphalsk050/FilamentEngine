@@ -31,8 +31,14 @@ void Application::run() {
     // Create resource manager
     auto resourceManager = std::make_unique<ResourceManager>(*m_renderContext->getEngine());
 
+    // Create debug renderer
+    m_debugRenderer = std::make_unique<DebugRenderer>(*m_renderContext);
+
+    // Create ImGui layer
+    m_imguiLayer = std::make_unique<ImGuiLayer>(*m_renderContext, *m_window);
+
     // Create ECS world
-    m_world = std::make_unique<World>(*m_renderContext, m_input);
+    m_world = std::make_unique<World>(*m_renderContext, m_input, m_inputMap);
 
     // Register built-in systems (in priority order)
     m_world->registerSystem<TransformSyncSystem>();
@@ -55,16 +61,41 @@ void Application::run() {
         // Poll events and update input
         m_window->pollEvents(m_input, m_eventBus);
 
+        // Update input actions
+        m_inputMap.update(m_input);
+
         // Allow user to handle ESC to quit
         if (m_input.isKeyPressed(Key::Escape)) {
             break;
         }
 
+        // Begin debug frame
+        m_debugRenderer->beginFrame();
+
+        // Begin ImGui frame
+        m_imguiLayer->beginFrame(dt);
+
         // User update
         onUpdate(dt);
 
+        // User ImGui drawing
+        onImGui();
+
+        // Draw overlays
+        for (auto& overlay : m_overlays) {
+            if (overlay->isEnabled()) {
+                overlay->onDraw();
+            }
+        }
+
+        // End ImGui frame
+        m_imguiLayer->endFrame();
+
         // ECS systems update (syncs to Filament)
         m_world->updateSystems(dt);
+
+        // Render debug geometry
+        m_debugRenderer->render();
 
         // Render
         if (m_renderContext->beginFrame()) {
@@ -78,8 +109,17 @@ void Application::run() {
     // User cleanup
     onShutdown();
 
+    // Destroy overlays
+    m_overlays.clear();
+
     // Destroy ECS world (cleans up entities and Filament components)
     m_world.reset();
+
+    // Destroy ImGui layer
+    m_imguiLayer.reset();
+
+    // Destroy debug renderer
+    m_debugRenderer.reset();
 
     // Destroy resources
     resourceManager.reset();

@@ -77,6 +77,36 @@ target_link_libraries(test_entity_bridge PRIVATE
 )
 gtest_discover_tests(test_entity_bridge)
 
+# InputAction test — links engine lib so uses add_test (avoids Filament init timeout)
+add_executable(test_input_action unit/test_input_action.cpp)
+target_include_directories(test_input_action PRIVATE
+    "${CMAKE_SOURCE_DIR}/engine/include"
+    "${FILAMENT_DIST_DIR}/include"
+)
+target_link_libraries(test_input_action PRIVATE
+    GTest::gtest_main
+    filament_engine_lib
+)
+add_test(NAME test_input_action COMMAND test_input_action)
+
+# InputMap test — links engine lib, same pattern
+add_executable(test_input_map unit/test_input_map.cpp)
+target_include_directories(test_input_map PRIVATE
+    "${CMAKE_SOURCE_DIR}/engine/include"
+    "${FILAMENT_DIST_DIR}/include"
+)
+target_link_libraries(test_input_map PRIVATE
+    GTest::gtest_main
+    filament_engine_lib
+)
+add_test(NAME test_input_map COMMAND test_input_map)
+
+# Overlay test (header-only, no engine lib required)
+add_unit_test(test_overlay unit/test_overlay.cpp)
+
+# DebugRenderer geometry test (uses testable wrapper, no engine lib)
+add_unit_test(test_debug_renderer unit/test_debug_renderer.cpp)
+
 # ==============================
 # Integration Tests (require Filament engine)
 # ==============================

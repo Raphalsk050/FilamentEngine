@@ -1,4 +1,5 @@
 #include <filament_engine/ecs/world.h>
+#include <filament_engine/ecs/scene.h>
 #include <filament_engine/rendering/render_context.h>
 #include <filament_engine/core/log.h>
 
@@ -8,13 +9,16 @@
 
 namespace fe {
 
-World::World(RenderContext& renderContext, Input& input)
-    : m_renderContext(renderContext), m_input(input) {
+World::World(RenderContext& renderContext, Input& input, InputMap& inputMap)
+    : m_renderContext(renderContext), m_input(input), m_inputMap(inputMap) {
     FE_LOG_INFO("World created");
 }
 
 World::~World() {
     shutdownSystems();
+
+    // Destroy all scenes first
+    m_scenes.clear();
 
     // Destroy all Filament components from entities before ResourceManager cleans up
     // materials. This prevents "MaterialInstance still in use by Renderable" errors.
@@ -52,7 +56,7 @@ World::~World() {
     FE_LOG_INFO("World destroyed");
 }
 
-entt::entity World::createEntity(const std::string& name) {
+Entity World::createEntity(const std::string& name) {
     auto entity = m_registry.create();
 
     // Every entity gets a tag and transform by default
@@ -67,7 +71,7 @@ entt::entity World::createEntity(const std::string& name) {
     auto& tcm = m_renderContext.getTransformManager();
     tcm.create(filamentEntity);
 
-    return entity;
+    return Entity(entity, this);
 }
 
 void World::destroyEntity(entt::entity entity) {
@@ -105,6 +109,10 @@ void World::destroyEntity(entt::entity entity) {
     m_registry.destroy(entity);
 }
 
+void World::destroyEntity(Entity entity) {
+    destroyEntity(entity.getHandle());
+}
+
 void World::updateSystems(float dt) {
     for (auto& system : m_systems) {
         system->update(*this, dt);
@@ -116,6 +124,29 @@ void World::shutdownSystems() {
         system->shutdown(*this);
     }
     m_systems.clear();
+}
+
+// Scene management
+
+Scene& World::createScene(const std::string& name) {
+    auto [it, inserted] = m_scenes.try_emplace(name, std::make_unique<Scene>(*this, name));
+    if (!inserted) {
+        FE_LOG_WARN("Scene '%s' already exists, returning existing", name.c_str());
+    }
+    return *it->second;
+}
+
+Scene* World::getScene(const std::string& name) {
+    auto it = m_scenes.find(name);
+    return (it != m_scenes.end()) ? it->second.get() : nullptr;
+}
+
+void World::destroyScene(const std::string& name) {
+    auto it = m_scenes.find(name);
+    if (it != m_scenes.end()) {
+        it->second->destroyAll();
+        m_scenes.erase(it);
+    }
 }
 
 } // namespace fe
